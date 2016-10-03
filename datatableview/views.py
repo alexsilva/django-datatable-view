@@ -53,6 +53,9 @@ class DatatableMixin(MultipleObjectMixin):
     datatable_options_class = DatatableOptions
     datatable_structure_class = DatatableStructure
 
+    def get_request_params(self):
+        return getattr(self.request, self.request.method)
+
     def get(self, request, *args, **kwargs):
         """
         Detects AJAX access and returns appropriate serialized data.  Normal access to the view is
@@ -60,7 +63,7 @@ class DatatableMixin(MultipleObjectMixin):
 
         """
 
-        if request.is_ajax() or request.GET.get('ajax') == 'true':
+        if request.is_ajax() or self.get_request_params().get('ajax') == 'true':
             return self.get_ajax(request, *args, **kwargs)
         return super(DatatableMixin, self).get(request, *args, **kwargs)
 
@@ -104,10 +107,10 @@ class DatatableMixin(MultipleObjectMixin):
             options = self.get_datatable_options()
             if options:
                 # Options are defined, but probably in a raw dict format
-                options = self.datatable_options_class(model, self.request.GET, **dict(options))
+                options = self.datatable_options_class(model, self.get_request_params(), **dict(options))
             else:
                 # No options defined on the view
-                options = self.datatable_options_class(model, self.request.GET)
+                options = self.datatable_options_class(model, self.get_request_params())
 
             self._datatable_options = options
         return self._datatable_options
